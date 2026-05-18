@@ -4,6 +4,7 @@ import BookingFilter from "@/Components/BookingFilter";
 import FeaturedCars from "@/Components/FeaturedCars";
 import WhyChooseUs from "@/Components/WhyChooseUs";
 import HowItWorks from "@/Components/HowItWorks";
+import Testimonials from "@/Components/Testimonials";
  
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <FeaturedCars />
       <HowItWorks />
       <WhyChooseUs />
+      <Testimonials />
     </main>
   );
 }
