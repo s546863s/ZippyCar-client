@@ -2,7 +2,9 @@ import Navbar from "@/Components/Navbar";
 import Hero from "@/Components/Hero";
 import BookingFilter from "@/Components/BookingFilter";
 import FeaturedCars from "@/Components/FeaturedCars";
-import Footer from "@/Components/Footer";
+import WhyChooseUs from "@/Components/WhyChooseUs";
+import HowItWorks from "@/Components/HowItWorks";
+ 
 
 export default function Home() {
   return (
@@ -11,6 +13,8 @@ export default function Home() {
       <Hero />
       <BookingFilter />
       <FeaturedCars />
+      <HowItWorks />
+      <WhyChooseUs />
     </main>
   );
 }
