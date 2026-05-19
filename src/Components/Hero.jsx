@@ -30,7 +30,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative bg-[#090d16] text-white overflow-hidden pt-24 pb-16 lg:pt-32 lg:pb-24">
+    <section className="relative bg-[#090d16] text-white overflow-hidden pt-4 pb-16 lg:pt-6 lg:pb-24">
       {/* Background radial glow effect with GPU acceleration */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500 opacity-5 blur-[120px] rounded-full pointer-events-none transform-gpu" />
       
