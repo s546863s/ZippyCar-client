@@ -4,16 +4,17 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaCar, FaCogs, FaGasPump, FaUserFriends, FaArrowLeft, 
-  FaCalendarAlt, FaCheckCircle, FaShieldAlt, FaMapMarkerAlt 
+  FaCalendarAlt, FaCheckCircle, FaShieldAlt, FaMapMarkerAlt,
+  FaTimes, FaCrown, FaReceipt
 } from "react-icons/fa";
 
 const CarDetailsPage = () => {
   const { id } = useParams();
 
-  // ১. ডেমো ডাটাবেজ (বাস্তবে এটি API বা MongoDB থেকে আসবে)
+  // ১. ডেমো ডাটাবেজ
   const carDatabase = {
     "1": { name: "BMW 5 Series", type: "Sedan", price: 120, transmission: "Automatic", fuel: "Octane", seats: 5, image: "https://images.unsplash.com/photo-1555215695-3004980ad54e", desc: "Experience the ultimate driving machine. The BMW 5 Series blends breathtaking luxury with dynamic sporty performance, perfect for high-profile executive trips and smooth highway cruising." },
     "2": { name: "Audi Q7 Luxury", type: "SUV", price: 180, transmission: "Automatic", fuel: "Hybrid", seats: 7, image: "https://images.unsplash.com/photo-1563720223185-11003d516935", desc: "The Audi Q7 is a masterpiece of luxury and space. Equipped with legendary Quattro all-wheel drive, premium sound acoustic setups, and ample 7-passenger seating capacity for elite family getaways." },
@@ -23,16 +24,16 @@ const CarDetailsPage = () => {
     "6": { name: "Range Rover Vogue", type: "SUV", price: 250, transmission: "Automatic", fuel: "Hybrid", seats: 5, image: "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5", desc: "Peerless status and imperial luxury. The Range Rover Vogue offers an unmatched floating-ride experience, active noise cancellation cabins, and command driving dynamics." }
   };
 
-  // ডাইনামিক আইডি অনুযায়ী নির্দিষ্ট গাড়ি খুঁজে বের করা
   const car = carDatabase[id] || carDatabase["1"];
 
-  // ২. বুকিং ফর্ম স্টেট ম্যানেজমেন্ট
+  // ২. বুকিং ফর্ম ও মডাল স্টেট ম্যানেজমেন্ট
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [totalCost, setTotalCost] = useState(0);
   const [rentalDays, setRentalDays] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false); // মডাল কন্ট্রোল স্টেট
 
-  // ৩. ডাইনামিক দিন ও প্রাইস ক্যালকুলেশন এফেক্ট
+  // ৩. ডাইনামিক দিন ও প্রাইস ক্যালকুলেশন
   useEffect(() => {
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -53,8 +54,18 @@ const CarDetailsPage = () => {
   const handleBookingSubmit = (e) => {
     e.preventDefault();
     if (rentalDays <= 0) return alert("Please select a valid future date range!");
-    alert(`Booking Confirmed for ${car.name}! Total Days: ${rentalDays}, Total: $${totalCost}`);
-    // এখানে পরবর্তীতে বুকিং ডাটাবেজে পাঠানোর লজিক যুক্ত হবে
+    
+    // অ্যালার্টের পরিবর্তে মডাল ওপেন হবে
+    setIsModalOpen(true);
+  };
+
+  // মডাল ক্লোজ এবং ফর্ম রিসেট ফাংশন
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setStartDate("");
+    setEndDate("");
+    setRentalDays(0);
+    setTotalCost(0);
   };
 
   return (
@@ -76,25 +87,16 @@ const CarDetailsPage = () => {
         {/* Two-Column Grid Layout: Details vs Booking Form */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
-          {/* Left Column: Media & Specs (8 Columns) */}
+          {/* Left Column: Media & Specs */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-8">
-            
-            {/* Big Premium Image Banner */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="relative w-full h-64 sm:h-[400px] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl"
             >
-              <Image 
-                src={car.image} 
-                alt={car.name} 
-                fill 
-                className="object-cover"
-                priority
-              />
+              <Image src={car.image} alt={car.name} fill className="object-cover" priority />
             </motion.div>
 
-            {/* Title Block Metadata */}
             <div className="space-y-3">
               <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-mono font-bold uppercase rounded-md tracking-wider">
                 {car.type} Category
@@ -103,7 +105,6 @@ const CarDetailsPage = () => {
               <p className="text-sm text-slate-400 leading-relaxed max-w-3xl">{car.desc}</p>
             </div>
 
-            {/* Core Specs Grid System */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-[#111827] border border-slate-800 p-4 rounded-xl flex items-center gap-4">
                 <div className="w-10 h-10 bg-slate-800 border border-slate-700 text-amber-500 flex items-center justify-center rounded-lg"><FaCogs /></div>
@@ -119,7 +120,6 @@ const CarDetailsPage = () => {
               </div>
             </div>
 
-            {/* Rental Included Premium Perks */}
             <div className="bg-[#111827]/50 border border-slate-800/80 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-slate-200">Rental Premium Assurances</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-300">
@@ -129,10 +129,9 @@ const CarDetailsPage = () => {
                 <div className="flex items-center gap-2.5"><FaCheckCircle className="text-amber-500 shrink-0 text-xs" /> Completely Sanitized & Detailed Before Handover</div>
               </div>
             </div>
-
           </div>
 
-          {/* Right Column: Sticky Booking Controller Form (4 Columns) */}
+          {/* Right Column: Sticky Booking Controller Form */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -146,19 +145,12 @@ const CarDetailsPage = () => {
               </div>
             </div>
 
-            {/* Form Fields Elements */}
             <form onSubmit={handleBookingSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Pick-Up Date</label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none" />
-                  <input 
-                    type="date" 
-                    required
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/40 rounded-xl pl-11 pr-4 py-3 text-xs text-slate-300 outline-none uppercase tracking-wider transition-all duration-200"
-                  />
+                  <input type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/40 rounded-xl pl-11 pr-4 py-3 text-xs text-slate-300 outline-none uppercase tracking-wider transition-all duration-200" />
                 </div>
               </div>
 
@@ -166,23 +158,12 @@ const CarDetailsPage = () => {
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Return Date</label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none" />
-                  <input 
-                    type="date" 
-                    required
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/40 rounded-xl pl-11 pr-4 py-3 text-xs text-slate-300 outline-none uppercase tracking-wider transition-all duration-200"
-                  />
+                  <input type="date" required value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/40 rounded-xl pl-11 pr-4 py-3 text-xs text-slate-300 outline-none uppercase tracking-wider transition-all duration-200" />
                 </div>
               </div>
 
-              {/* Dynamic Bill Invoice Breakdown Output */}
               {rentalDays > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 space-y-2 text-xs text-slate-400 mt-2 font-medium"
-                >
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-4 space-y-2 text-xs text-slate-400 mt-2 font-medium">
                   <div className="flex justify-between"><span>Base Day Rate:</span><span className="text-white">${car.price} x {rentalDays} Days</span></div>
                   <div className="flex justify-between"><span>GPS & Insurance Fees:</span><span className="text-emerald-500 font-bold">FREE / Complementary</span></div>
                   <div className="w-full border-t border-slate-800/80 my-2" />
@@ -193,28 +174,103 @@ const CarDetailsPage = () => {
                 </motion.div>
               )}
 
-              {/* Submit Checkout Trigger CTA Button */}
-              <motion.button 
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-extrabold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2 cursor-pointer mt-4"
-              >
-                <FaCar className="text-xs" />
-                Reserve Asset Slot
+              <motion.button whileTap={{ scale: 0.98 }} type="submit" className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-extrabold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2 cursor-pointer mt-4">
+                <FaCar className="text-xs" /> Reserve Asset Slot
               </motion.button>
             </form>
 
-            {/* Dynamic Trust Badges Footer Form */}
             <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-500 pt-2 border-t border-slate-800/80 font-medium">
               <div className="flex items-center gap-1.5"><FaShieldAlt className="text-amber-500/70" /> Secured Verification</div>
               <div className="flex items-center gap-1.5"><FaMapMarkerAlt className="text-amber-500/70" /> Fleet Hub Pickup</div>
             </div>
-
           </motion.div>
-
         </div>
-
       </div>
+
+      {/* ==================== 🎉 PREMIUM CONGRATS MODAL ==================== */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            
+            {/* Backdrop Blur Overlap */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCloseModal}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm cursor-pointer"
+            />
+
+            {/* Core Modal Box Sheet */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-[#111827] border border-slate-800 max-w-md w-full rounded-2xl p-6 text-center shadow-2xl z-10 relative overflow-hidden"
+            >
+              {/* Top Cyber Line Glow */}
+              <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+              
+              {/* Close Action Trigger */}
+              <button 
+                onClick={handleCloseModal}
+                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors cursor-pointer"
+              >
+                <FaTimes className="text-sm" />
+              </button>
+
+              {/* Glowing Animated Crown Icon Container */}
+              <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 mx-auto rounded-full flex items-center justify-center text-2xl mb-4 relative">
+                <FaCrown className="animate-pulse" />
+                <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-md animate-ping opacity-30 pointer-events-none" />
+              </div>
+
+              {/* Typography Heading Headers */}
+              <h2 className="text-2xl font-black tracking-tight text-white">
+                Congratulations, Captain!
+              </h2>
+              <p className="text-xs text-slate-400 mt-1.5 max-w-xs mx-auto">
+                Your premium fleet request has been authorized and securely added to the garage schedules.
+              </p>
+
+              {/* Custom Mini Invoice Breakdown inside Modal */}
+              <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-4 my-5 text-left text-xs space-y-2.5 font-medium text-slate-400">
+                <div className="flex justify-between items-center">
+                  <span>Selected Machine:</span>
+                  <span className="text-white font-bold">{car.name}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Deployment Timeline:</span>
+                  <span className="text-amber-400 font-mono font-bold">{rentalDays} Days Premium Slot</span>
+                </div>
+                <div className="w-full border-t border-slate-800/40 my-1" />
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-300 font-bold">Total Allocation:</span>
+                  <span className="text-emerald-400 font-black text-base">${totalCost}</span>
+                </div>
+              </div>
+
+              {/* Action Redirection Route Triggers */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link 
+                  href="/my-bookings" 
+                  className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10"
+                >
+                  <FaReceipt className="text-[10px]" /> View Bookings
+                </Link>
+                <button 
+                  onClick={handleCloseModal}
+                  className="flex-1 py-3 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-300 cursor-pointer"
+                >
+                  Keep Browsing
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

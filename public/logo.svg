@@ -1,0 +1,222 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 215 50"
+  width="215"
+  height="50"
+  role="img"
+  aria-label="ZippyCar logo"
+>
+  <!-- =============================================
+       ZippyCar — Navbar Logo (Animated SVG)
+       Matches: ZippyCarLogo.jsx + ZippyCarLogo.css
+       viewBox : 0 0 215 50
+       Layout  : [car-scene 90×40] [gap 8] [text-block]
+  ============================================== -->
+
+  <defs>
+
+    <!-- ── Drop-shadow filter for "Zippy" text ── -->
+    <filter id="zippyShadow" x="-5%" y="-10%" width="120%" height="150%">
+      <feDropShadow dx="1.5" dy="1.5" stdDeviation="0" flood-color="#b45309" result="shadow"/>
+      <feDropShadow dx="0"   dy="0"   stdDeviation="3"
+                    flood-color="#f59e0b" flood-opacity="0.27" in="SourceGraphic"/>
+    </filter>
+
+    <!-- ── Animations ── -->
+    <style>
+      /* Wheel spin — transform-origin in inner-SVG user units (130×70 viewBox) */
+      .nav-wheel-back  {
+        transform-origin : 31px 60px;
+        animation        : navWheelSpin 0.4s linear infinite;
+      }
+      .nav-wheel-front {
+        transform-origin : 81px 60px;
+        animation        : navWheelSpin 0.4s linear infinite;
+      }
+
+      /* Road dashes */
+      .nav-road-line {
+        stroke-dasharray  : 10 10;
+        animation         : navRoadDash 0.3s linear infinite;
+      }
+
+      /* Car glow */
+      .nav-car-group {
+        animation : navGlowPulse 2s ease-in-out infinite;
+      }
+
+      /* Speed lines */
+      .nav-speed-line-1 { animation: navSpeedLine 0.5s ease-out         infinite; }
+      .nav-speed-line-2 { animation: navSpeedLine 0.5s ease-out 0.1s    infinite; }
+
+      /* Brand text reveal */
+      .nav-brand-group {
+        animation : navTextReveal 1s cubic-bezier(0.23,1,0.32,1) both;
+      }
+
+      /* Tagline slide-in */
+      .nav-tagline-group {
+        animation : navTaglineSlide 0.6s ease-out 0.8s both;
+      }
+
+      /* ── Keyframes ── */
+      @keyframes navWheelSpin {
+        from { transform: rotate(0deg);   }
+        to   { transform: rotate(360deg); }
+      }
+
+      @keyframes navRoadDash {
+        from { stroke-dashoffset: 0;   }
+        to   { stroke-dashoffset: -20; }
+      }
+
+      @keyframes navGlowPulse {
+        0%,100% { filter: drop-shadow(0 0 2px rgba(245,158,11,0.27)); }
+        50%     { filter: drop-shadow(0 0 6px rgba(245,158,11,0.53)); }
+      }
+
+      @keyframes navSpeedLine {
+        0%   { transform: translateX(0);    opacity: 0.7; }
+        100% { transform: translateX(22px); opacity: 0;   }
+      }
+
+      @keyframes navTextReveal {
+        0%   { letter-spacing: -3px;   opacity: 0; }
+        100% { letter-spacing: 0.5px;  opacity: 1; }
+      }
+
+      @keyframes navTaglineSlide {
+        0%   { transform: translateY(4px); opacity: 0; }
+        100% { transform: translateY(0);   opacity: 1; }
+      }
+    </style>
+  </defs>
+
+
+  <!-- ════════════════════════════════
+       CAR SCENE  (90×40, starts x=0 y=5)
+  ════════════════════════════════ -->
+
+  <!-- Road line at bottom of scene (y=44 = 5+39) -->
+  <line
+    class="nav-road-line"
+    x1="0" y1="44" x2="90" y2="44"
+    stroke="#f59e0b" stroke-width="1.5" opacity="0.4"
+  />
+
+  <!--
+    Nested SVG for the car:
+      • positioned at x=7.5 (centred inside 90px scene: (90-75)/2)
+      • rendered at 75×40 px  →  viewBox 0 0 130 70
+      • overflow visible so speed-lines can exit left edge
+  -->
+  <svg x="7.5" y="5" width="75" height="40" viewBox="0 0 130 70" overflow="visible">
+    <g class="nav-car-group">
+
+      <!-- Speed lines (exit left) -->
+      <line class="nav-speed-line-1"
+            x1="2" y1="38" x2="22" y2="38"
+            stroke="#f59e0b" stroke-width="2"   stroke-linecap="round" opacity="0.7"/>
+      <line class="nav-speed-line-2"
+            x1="2" y1="46" x2="18" y2="46"
+            stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+
+      <!-- Car body -->
+      <rect x="18" y="36" width="95" height="24" fill="#1e293b" rx="4"/>
+
+      <!-- Roof -->
+      <path d="M38 36 Q45 18 70 17 Q90 17 98 36 Z" fill="#1e293b"/>
+
+      <!-- Windshield -->
+      <path d="M44 36 Q49 22 68 21 Q82 21 88 36 Z" fill="#60a5fa" opacity="0.8"/>
+
+      <!-- Rear window -->
+      <path d="M44 35 Q49 24 63 22 L63 35 Z"        fill="#60a5fa" opacity="0.7"/>
+
+      <!-- Front window -->
+      <path d="M70 35 Q73 21 85 21 Q89 28 89 35 Z"  fill="#60a5fa" opacity="0.7"/>
+
+      <!-- Headlight -->
+      <rect x="110" y="42" width="6" height="8" fill="#fef08a" rx="2"/>
+      <rect x="111" y="43" width="4" height="6" fill="#fde047" rx="1"/>
+
+      <!-- Tail-light -->
+      <rect x="18"  y="43" width="5"  height="7"  fill="#ef4444" rx="2"/>
+
+      <!-- Amber accent stripe -->
+      <rect x="18" y="52" width="95" height="4" fill="#f59e0b"/>
+
+      <!-- Door divider -->
+      <line x1="75" y1="37" x2="75" y2="60" stroke="#334155" stroke-width="1.5"/>
+
+      <!-- ── Wheel (back) — transform-origin matches cx,cy ── -->
+      <g class="nav-wheel-back">
+        <circle cx="31" cy="60" r="10" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+        <circle cx="31" cy="60" r="5"  fill="#334155"/>
+        <line x1="31" y1="53" x2="31" y2="67" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="24" y1="60" x2="38" y2="60" stroke="#94a3b8" stroke-width="1.5"/>
+      </g>
+
+      <!-- ── Wheel (front) — transform-origin matches cx,cy ── -->
+      <g class="nav-wheel-front">
+        <circle cx="81" cy="60" r="10" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+        <circle cx="81" cy="60" r="5"  fill="#334155"/>
+        <line x1="81" y1="53" x2="81" y2="67" stroke="#94a3b8" stroke-width="1.5"/>
+        <line x1="74" y1="60" x2="88" y2="60" stroke="#94a3b8" stroke-width="1.5"/>
+      </g>
+
+    </g>
+  </svg>
+
+
+  <!-- ════════════════════════════════
+       TEXT BLOCK  (starts x=98)
+  ════════════════════════════════ -->
+
+  <!-- Brand name — "Zippy" amber + shadow, "Car" white -->
+  <g class="nav-brand-group">
+
+    <!-- Shadow layer for "Zippy" (offset 1.5 / 1.5, colour #b45309) -->
+    <text
+      x="99.5" y="31.5"
+      font-family="'Arial Black', Impact, sans-serif"
+      font-size="22" font-weight="900" letter-spacing="0.5"
+      fill="#b45309"
+    >Zippy</text>
+
+    <!-- Main brand text -->
+    <text
+      y="30"
+      font-family="'Arial Black', Impact, sans-serif"
+      font-size="22" font-weight="900" letter-spacing="0.5"
+    >
+      <tspan x="98" fill="#f59e0b">Zippy</tspan><tspan fill="#ffffff">Car</tspan>
+    </text>
+
+  </g>
+
+  <!-- Tagline: FAST ··· STYLISH
+       Uses justify-between logic → "FAST" left-anchored, dots centred, "STYLISH" right-anchored.
+       Text-block width ≈ brand text width (≈107px) → ends at x≈205
+  -->
+  <g
+    class="nav-tagline-group"
+    font-family="Arial, sans-serif"
+    font-size="7.5"
+    font-weight="600"
+    fill="#94a3b8"
+    letter-spacing="2"
+  >
+    <!-- "FAST" -->
+    <text x="98" y="41.5">FAST</text>
+
+    <!-- Three amber dots (evenly spaced between FAST-end and STYLISH-start) -->
+    <circle cx="139" cy="39" r="1.5" fill="#f59e0b"/>
+    <circle cx="145" cy="39" r="1.5" fill="#f59e0b"/>
+    <circle cx="151" cy="39" r="1.5" fill="#f59e0b"/>
+
+    <!-- "STYLISH" right-anchored at x≈205 -->
+    <text x="205" y="41.5" text-anchor="end">STYLISH</text>
+  </g>
+
+</svg>
