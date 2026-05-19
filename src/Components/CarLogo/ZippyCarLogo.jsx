@@ -68,16 +68,20 @@ const ZippyCarLogo = () => {
       </div>
 
       {/* Brand text and tagline in the same section */}
-      <div className="nav-text-block">
+      <div className="nav-text-block ">
         <div className="nav-brand-text">
           <span className="nav-zippy">Zippy</span>
           <span className="nav-car-text">Car</span>
         </div>
 
-        <div className="nav-tagline">
+        <div className="nav-tagline flex gap-0.5 justify-between items-center ">
           <span>Fast</span>
           <span className="nav-dot-divider"></span>
+          <span className="nav-dot-divider"></span>
+          <span className="nav-dot-divider"></span>
+          
           <span>Stylish</span>
+        
         </div>
       </div>
     </div>

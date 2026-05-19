@@ -25,7 +25,7 @@ const NotFound = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-white flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none">
+    <div className="min-h-screen bg-[#090d16] text-white flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none py-4">
       
       {/* Decorative Background Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
