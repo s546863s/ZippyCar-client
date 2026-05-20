@@ -2,26 +2,107 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; 
 import { motion } from "framer-motion";
 import { FaEnvelope, FaLock, FaGoogle, FaArrowLeft } from "react-icons/fa";
+import { ToastContainer, toast } from "react-toastify"; 
+import "react-toastify/dist/ReactToastify.css"; 
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const router = useRouter();
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!email.trim()) {
+      errors.email = "Email Address is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    if (!password) {
+      errors.password = "Password is required";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Logging in with:", { email, password });
-    // এখানে আপনার Firebase বা Auth লজিক বসবে
+    
+    const isValid = validateForm();
+    if (!isValid) {
+      // Show colorful error toast if form is empty
+      toast.error("Please fix the errors in the form!"); 
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid email or password!");
+      }
+
+      // Show bright and colorful success toast on successful login
+      toast.success("Login successful! Welcome back.");
+      
+      setEmail("");
+      setPassword("");
+      setFieldErrors({});
+
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+
+    } catch (err) {
+      // Show bright red toast for any backend or other errors
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#090d16] text-white flex items-center justify-center px-4 pt-24 pb-12 relative overflow-hidden select-none">
+      
+      {/* —————————————————————————————————————————————————————————— */}
+      {/* Using theme="colored" to make toasts attractive and colorful */}
+      {/* —————————————————————————————————————————————————————————— */}
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000} 
+        theme="colored" 
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+
       {/* Decorative Background Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff01_1px,transparent_1px),linear-gradient(to_bottom,#ffffff01_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
-      <motion.div 
+      <motion.div  
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -43,21 +124,24 @@ const LoginPage = () => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleLogin} noValidate className="space-y-5">
+          
           {/* Email Input */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Email Address</label>
             <div className="relative">
               <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-              <input 
+              <input  
                 type="email" 
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="w-full bg-slate-900/60 border border-slate-800 focus:border-amber-500/50 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200"
+                className={`w-full bg-slate-900/60 border ${fieldErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-slate-800 focus:border-amber-500/50'} rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200`}
               />
             </div>
+            {fieldErrors.email && (
+              <p className="text-xs text-red-400 font-medium pl-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -68,24 +152,27 @@ const LoginPage = () => {
             </div>
             <div className="relative">
               <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-              <input 
+              <input  
                 type="password" 
-                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-900/60 border border-slate-800 focus:border-amber-500/50 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200"
+                className={`w-full bg-slate-900/60 border ${fieldErrors.password ? 'border-red-500/50 focus:border-red-500' : 'border-slate-800 focus:border-amber-500/50'} rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200`}
               />
             </div>
+            {fieldErrors.password && (
+              <p className="text-xs text-red-400 font-medium pl-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           {/* Submit Button */}
-          <motion.button 
+          <motion.button  
             whileTap={{ scale: 0.98 }}
+            disabled={loading}
             type="submit" 
-            className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/10 mt-2 cursor-pointer"
+            className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/10 mt-2 cursor-pointer disabled:opacity-50"
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </motion.button>
         </form>
 
@@ -96,7 +183,7 @@ const LoginPage = () => {
         </div>
 
         {/* Google Login */}
-        <motion.button 
+        <motion.button  
           whileTap={{ scale: 0.98 }}
           className="w-full py-3.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 font-semibold text-sm rounded-xl transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer shadow-md"
         >

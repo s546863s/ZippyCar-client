@@ -106,7 +106,7 @@ const Testimonials = () => {
 
                 {/* Customer Comment Content Box */}
                 <p className="text-slate-300 text-sm leading-relaxed italic">
-                  "{user.comment}"
+                  {user.comment}
                 </p>
               </div>
 

@@ -1,4 +1,4 @@
-import Navbar from "@/Components/Navbar";
+
 import Hero from "@/Components/Hero";
 import BookingFilter from "@/Components/BookingFilter";
 import FeaturedCars from "@/Components/FeaturedCars";
@@ -13,8 +13,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#090d16]">
       
        
-             <NewsTicker />
-          
+   <NewsTicker />
       <Hero />
       <BookingFilter />
          
