@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   FaCar,
   FaCloudUploadAlt,
@@ -11,12 +13,17 @@ import {
   FaUserFriends,
   FaClipboardList,
   FaHashtag,
+  FaCheckCircle,
+  FaHome,
+  FaPlusCircle
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AddCarPage = () => {
-  // State setup
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     carModel: "",
     brand: "",
@@ -31,6 +38,7 @@ const AddCarPage = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,10 +51,15 @@ const AddCarPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user?.email) {
+      toast.error("Please log in to add a car!");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Prepare final data
       const finalData = {
         carModel: formData.carModel,
         brand: formData.brand,
@@ -58,12 +71,11 @@ const AddCarPage = () => {
         vehicleNumber: formData.vehicleNumber,
         image: formData.image,
         description: formData.description,
-        userEmail: "salam@gmail.com",
+        userEmail: user.email,
         availability: "Available",
         bookingCount: 0,
       };
 
-      // API request
       const response = await fetch(
         "http://localhost:8000/api/cars/add",
         {
@@ -82,8 +94,8 @@ const AddCarPage = () => {
       }
 
       toast.success("Car added successfully!");
+      setShowModal(true);
 
-      // Reset form
       setFormData({
         carModel: "",
         brand: "",
@@ -103,6 +115,15 @@ const AddCarPage = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex flex-col items-center justify-center text-white">
+        <div className="w-10 h-10 border-4 border-slate-700 border-t-amber-500 rounded-full animate-spin mb-4" />
+        <p className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Checking Authentication...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#090d16] text-white pt-24 md:pt-28 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none">
       <ToastContainer
@@ -111,13 +132,11 @@ const AddCarPage = () => {
         theme="colored"
       />
 
-      {/* Background */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff01_1px,transparent_1px),linear-gradient(to_bottom,#ffffff01_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
       <div className="max-w-3xl mx-auto z-10 relative">
-        {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
             List Your <span className="text-amber-500">Premium Car</span>
@@ -134,17 +153,13 @@ const AddCarPage = () => {
           className="bg-[#111827] border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Row 1 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Car Model */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Vehicle Model Name
                 </label>
-
                 <div className="relative">
                   <FaCar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-
                   <input
                     type="text"
                     name="carModel"
@@ -157,15 +172,12 @@ const AddCarPage = () => {
                 </div>
               </div>
 
-              {/* Brand */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Car Brand
                 </label>
-
                 <div className="relative">
                   <FaClipboardList className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-
                   <input
                     type="text"
                     name="brand"
@@ -179,14 +191,11 @@ const AddCarPage = () => {
               </div>
             </div>
 
-            {/* Row 2 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {/* Type */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Car Type
                 </label>
-
                 <select
                   name="type"
                   value={formData.type}
@@ -200,15 +209,12 @@ const AddCarPage = () => {
                 </select>
               </div>
 
-              {/* Price */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Daily Price
                 </label>
-
                 <div className="relative">
                   <FaDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-
                   <input
                     type="number"
                     name="dailyPrice"
@@ -221,15 +227,12 @@ const AddCarPage = () => {
                 </div>
               </div>
 
-              {/* Vehicle Number */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Vehicle Number
                 </label>
-
                 <div className="relative">
                   <FaHashtag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-
                   <input
                     type="text"
                     name="vehicleNumber"
@@ -243,17 +246,13 @@ const AddCarPage = () => {
               </div>
             </div>
 
-            {/* Row 3 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {/* Transmission */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Transmission
                 </label>
-
                 <div className="relative">
                   <FaCogs className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none" />
-
                   <select
                     name="transmission"
                     value={formData.transmission}
@@ -266,15 +265,12 @@ const AddCarPage = () => {
                 </div>
               </div>
 
-              {/* Fuel */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Fuel Type
                 </label>
-
                 <div className="relative">
                   <FaGasPump className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none" />
-
                   <select
                     name="fuel"
                     value={formData.fuel}
@@ -288,15 +284,12 @@ const AddCarPage = () => {
                 </div>
               </div>
 
-              {/* Seats */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                   Seats
                 </label>
-
                 <div className="relative">
                   <FaUserFriends className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none" />
-
                   <select
                     name="seats"
                     value={formData.seats}
@@ -312,15 +305,12 @@ const AddCarPage = () => {
               </div>
             </div>
 
-            {/* Image URL */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                 Image URL
               </label>
-
               <div className="relative">
                 <FaCloudUploadAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-base" />
-
                 <input
                   type="url"
                   name="image"
@@ -333,12 +323,10 @@ const AddCarPage = () => {
               </div>
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
                 Description
               </label>
-
               <textarea
                 name="description"
                 required
@@ -350,7 +338,6 @@ const AddCarPage = () => {
               />
             </div>
 
-            {/* Submit */}
             <motion.button
               whileTap={{ scale: 0.98 }}
               disabled={isSubmitting}
@@ -376,6 +363,56 @@ const AddCarPage = () => {
           </form>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 select-none">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-[#111827] border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl relative z-10"
+            >
+              <div className="flex justify-center mb-4">
+                <FaCheckCircle className="text-emerald-500 text-5xl sm:text-6xl animate-bounce" />
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                Success!
+              </h3>
+              <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                Your luxury vehicle has been listed successfully. What would you like to do next?
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 border border-slate-700 cursor-pointer"
+                >
+                  <FaPlusCircle className="text-amber-500 text-base" />
+                  Add Another Car
+                </button>
+
+                <button
+                  onClick={() => router.push("/")}
+                  className="flex-1 py-3 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <FaHome className="text-base" />
+                  Go to Home
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -7,6 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
+
   const checkUserStatus = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/auth/me", {

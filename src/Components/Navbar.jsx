@@ -29,6 +29,7 @@ const Navbar = () => {
         setIsProfileOpen(false);
         setIsOpen(false);
         window.location.reload(); 
+         window.location.href = "/"; 
       }
     } catch (error) {
       console.error("Logout failed:", error);

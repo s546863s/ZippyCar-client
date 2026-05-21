@@ -2,3 +2,7 @@ AuthContext.jsx
 Login 
 reg
 
+import { useAuth } from "@/context/AuthContext";
+const { user, loading: authLoading } = useAuth();
+user.email
+এ দুইটা লজিক ইউজ করে আপনি আমাকে ওই সমস্ত কার্ডগুলো এখানে দেখাবেন যেগুলো ইউজার ইমেইলের সঙ্গে ম্যাচ করবে

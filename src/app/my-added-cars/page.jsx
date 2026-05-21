@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,38 +10,14 @@ import {
   FaCar, FaPlus, FaTrashAlt, FaEdit, FaTools, FaCalendarAlt, 
   FaTimes, FaExclamationTriangle, FaSave, FaDollarSign, FaTag 
 } from "react-icons/fa";
+import { useAuth } from "@/context/AuthContext";
 
 const MyAddedCarsPage = () => {
-  // ১. মক ডাটাবেজ
-  const [myCars, setMyCars] = useState([
-    {
-      id: "1",
-      name: "BMW 5 Series",
-      type: "Sedan",
-      image: "https://images.unsplash.com/photo-1555215695-3004980ad54e",
-      price: 120,
-      dateAdded: "2026-04-15",
-      status: "Available"
-    },
-    {
-      id: "3",
-      name: "Mercedes-Benz E-Class",
-      type: "Sedan",
-      image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8",
-      price: 150,
-      dateAdded: "2026-04-18",
-      status: "Rented"
-    },
-    {
-      id: "5",
-      name: "Civic Turbo Type R",
-      type: "Sedan",
-      image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2",
-      price: 90,
-      dateAdded: "2026-05-02",
-      status: "Available"
-    }
-  ]);
+  const { user, loading: authLoading } = useAuth();
+  
+  // স্টেটস
+  const [myCars, setMyCars] = useState([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   // মডাল এবং অ্যাক্টিভ কার ট্র্যাকিং স্টেটস
   const [activeCar, setActiveCar] = useState(null);
@@ -53,82 +29,141 @@ const MyAddedCarsPage = () => {
   const [editPrice, setEditPrice] = useState("");
   const [editStatus, setEditStatus] = useState("");
 
-  // ২. ডিলিট ট্রিগার লজিক (টোস্ট সহ)
+  // ১. ডায়নামিকভাবে ইউজারের ইমেইল অনুযায়ী ডেটা ফেচ করা
+  useEffect(() => {
+    const fetchMyCars = async () => {
+      if (!user?.email) return;
+      
+      try {
+        setIsDataLoading(true);
+        // আপনার ব্যাকএন্ড এন্ডপয়েন্ট অনুযায়ী ইউজার ইমেইল দিয়ে কুয়েরি করা হলো
+        const response = await fetch(`http://localhost:8000/api/cars?email=${user.email}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          setMyCars(data);
+        } else {
+          toast.error("Failed to load cars data!");
+        }
+      } catch (err) {
+        console.error("Error fetching cars:", err);
+        toast.error("Something went wrong while fetching data!");
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    if (!authLoading) {
+      fetchMyCars();
+    }
+  }, [user, authLoading]);
+
+  // ২. ডিলিট লজিক (API Request সহ)
   const openDeleteModal = (car) => {
     setActiveCar(car);
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDeleteCar = () => {
-    if (activeCar) {
-      setMyCars(myCars.filter((car) => car.id !== activeCar.id));
+  const confirmDeleteCar = async () => {
+    if (!activeCar) return;
+
+    try {
+      // ডেটাবেজ থেকে ডিলিট করার জন্য API কল (ধরে নেওয়া হয়েছে আইডিটি _id ফিল্ডে আছে)
+      const response = await fetch(`http://localhost:8000/api/cars/${activeCar._id || activeCar.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete the car from database.");
+      }
+
+      // UI স্টেট আপডেট
+      setMyCars(myCars.filter((car) => (car._id || car.id) !== (activeCar._id || activeCar.id)));
       setIsDeleteModalOpen(false);
       
-      // ✅ Delete success toast
-      toast.success(`🚗 ${activeCar.name} has been removed from your fleet!`, {
+      toast.success(`🚗 ${activeCar.carModel || activeCar.name} has been removed!`, {
         position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
         theme: "dark",
       });
       
       setActiveCar(null);
+    } catch (err) {
+      toast.error(err.message || "Could not delete vehicle!");
     }
   };
 
-  // ৩. এডিট ট্রিগার লজিক (টোস্ট সহ)
+  // ৩. এডিট লজিক (API Request সহ)
   const openEditModal = (car) => {
     setActiveCar(car);
-    setEditName(car.name);
-    setEditPrice(car.price);
-    setEditStatus(car.status);
+    setEditName(car.carModel || car.name);
+    setEditPrice(car.dailyPrice || car.price);
+    setEditStatus(car.availability || car.status);
     setIsEditModalOpen(true);
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setMyCars(myCars.map((car) => 
-      car.id === activeCar.id 
-        ? { ...car, name: editName, price: Number(editPrice), status: editStatus }
-        : car
-    ));
-    setIsEditModalOpen(false);
-    
-    // ✅ Edit success toast
-    toast.success(`✏️ ${editName} has been updated successfully!`, {
-      position: "top-center",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      theme: "dark",
-    });
-    
-    setActiveCar(null);
+    if (!activeCar) return;
+
+    try {
+      const updatedInfo = {
+        carModel: editName,
+        dailyPrice: Number(editPrice),
+        availability: editStatus
+      };
+
+      // ডেটাবেজে আপডেট করার জন্য PATCH/PUT API কল
+      const response = await fetch(`http://localhost:8000/api/cars/${activeCar._id || activeCar.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedInfo),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update vehicle details.");
+      }
+
+      // UI স্টেট সাথে সাথে ডায়নামিকালি আপডেট
+      setMyCars(myCars.map((car) => 
+        (car._id || car.id) === (activeCar._id || activeCar.id) 
+          ? { ...car, carModel: editName, name: editName, dailyPrice: Number(editPrice), price: Number(editPrice), availability: editStatus, status: editStatus }
+          : car
+      ));
+
+      setIsEditModalOpen(false);
+      
+      toast.success(`✏️ ${editName} has been updated successfully!`, {
+        position: "top-center",
+        theme: "dark",
+      });
+      
+      setActiveCar(null);
+    } catch (err) {
+      toast.error(err.message || "Could not update vehicle!");
+    }
   };
+
+  // অথেনটিকেশন বা ডেটা লোড হওয়ার সময়ের কন্ডিশনাল রেন্ডারিং
+  if (authLoading || isDataLoading) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex flex-col items-center justify-center text-white">
+        <div className="w-10 h-10 border-4 border-slate-700 border-t-amber-500 rounded-full animate-spin mb-4" />
+        <p className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Loading Fleet Data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#090d16] text-white pt-24 md:pt-28 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden select-none">
       
-      {/* react-toastify container */}
       <ToastContainer 
         position="top-right"
         autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
         theme="dark"
       />
       
-      {/* Background Decorative Ambient Glows */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
@@ -155,136 +190,156 @@ const MyAddedCarsPage = () => {
         </div>
 
         {/* Desktop Data Grid View */}
-        <div className="hidden md:block bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-900/60 border-b border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                <th className="p-5">Car Details</th>
-                <th className="p-5">Date Deployed</th>
-                <th className="p-5">Price / Day</th>
-                <th className="p-5">Status</th>
-                <th className="p-5 text-center">Management Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-sm font-medium">
-              <AnimatePresence mode="popLayout">
-                {myCars.map((car) => (
-                  <motion.tr 
-                    key={car.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="hover:bg-slate-900/30 transition-colors group"
-                  >
-                    <td className="p-5 flex items-center gap-4">
-                      <div className="relative w-16 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0 border border-slate-800 group-hover:border-slate-700 transition-colors">
-                        <Image src={car.image} alt={car.name} fill className="object-cover" />
-                      </div>
-                      <div>
-                        <span className="text-white block font-bold group-hover:text-amber-500 transition-colors">{car.name}</span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500/70">{car.type}</span>
-                      </div>
-                    </td>
+        {myCars.length > 0 && (
+          <div className="hidden md:block bg-[#111827] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-900/60 border-b border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                  <th className="p-5">Car Details</th>
+                  <th className="p-5">Date Deployed</th>
+                  <th className="p-5">Price / Day</th>
+                  <th className="p-5">Status</th>
+                  <th className="p-5 text-center">Management Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 text-sm font-medium">
+                <AnimatePresence mode="popLayout">
+                  {myCars.map((car) => {
+                    const carId = car._id || car.id;
+                    const name = car.carModel || car.name;
+                    const price = car.dailyPrice || car.price;
+                    const status = car.availability || car.status;
+                    const date = car.dateAdded || new Date(car.createdAt).toLocaleDateString() || "N/A";
 
-                    <td className="p-5 text-slate-400 text-xs font-mono">
-                      <span className="flex items-center gap-1.5"><FaCalendarAlt className="text-slate-600" /> {car.dateAdded}</span>
-                    </td>
+                    return (
+                      <motion.tr 
+                        key={carId}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="hover:bg-slate-900/30 transition-colors group"
+                      >
+                        <td className="p-5 flex items-center gap-4">
+                          <div className="relative w-16 h-12 rounded-lg bg-slate-800 overflow-hidden shrink-0 border border-slate-800 group-hover:border-slate-700 transition-colors">
+                            <Image src={car.image} alt={name} fill className="object-cover" unoptimized />
+                          </div>
+                          <div>
+                            <span className="text-white block font-bold group-hover:text-amber-500 transition-colors">{name}</span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500/70">{car.type}</span>
+                          </div>
+                        </td>
 
-                    <td className="p-5 font-black text-amber-500">${car.price}</td>
+                        <td className="p-5 text-slate-400 text-xs font-mono">
+                          <span className="flex items-center gap-1.5"><FaCalendarAlt className="text-slate-600" /> {date}</span>
+                        </td>
 
-                    <td className="p-5">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 border rounded-md text-[10px] font-mono font-bold uppercase tracking-wide ${
-                        car.status === "Available" 
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                          : "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                      }`}>
-                        {car.status}
-                      </span>
-                    </td>
+                        <td className="p-5 font-black text-amber-500">${price}</td>
 
-                    <td className="p-5 text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        <button 
-                          onClick={() => openEditModal(car)}
-                          className="p-2.5 bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:text-amber-500 rounded-xl text-xs transition-all duration-200 cursor-pointer"
-                          title="Modify Vehicle Specifications"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button 
-                          onClick={() => openDeleteModal(car)}
-                          className="p-2.5 bg-slate-900 border border-slate-800 hover:border-red-500/40 hover:text-red-400 rounded-xl text-xs transition-all duration-200 cursor-pointer"
-                          title="Purge From Fleet"
-                        >
-                          <FaTrashAlt />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
+                        <td className="p-5">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 border rounded-md text-[10px] font-mono font-bold uppercase tracking-wide ${
+                            status === "Available" 
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                              : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                          }`}>
+                            {status}
+                          </span>
+                        </td>
+
+                        <td className="p-5 text-center">
+                          <div className="flex items-center justify-center gap-3">
+                            <button 
+                              onClick={() => openEditModal(car)}
+                              className="p-2.5 bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:text-amber-500 rounded-xl text-xs transition-all duration-200 cursor-pointer"
+                              title="Modify Vehicle Specifications"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button 
+                              onClick={() => openDeleteModal(car)}
+                              className="p-2.5 bg-slate-900 border border-slate-800 hover:border-red-500/40 hover:text-red-400 rounded-xl text-xs transition-all duration-200 cursor-pointer"
+                              title="Purge From Fleet"
+                            >
+                              <FaTrashAlt />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Mobile Responsive Layout */}
-        <div className="grid grid-cols-1 gap-6 md:hidden">
-          <AnimatePresence mode="popLayout">
-            {myCars.map((car) => (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, x: -20 }}
-                key={car.id} 
-                className="bg-[#111827] border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="relative w-20 h-14 bg-slate-800 rounded-xl overflow-hidden border border-slate-800 shrink-0">
-                    <Image src={car.image} alt={car.name} fill className="object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <span className={`inline-flex px-2 py-0.5 border rounded-md text-[9px] font-mono font-bold uppercase tracking-widest mb-1 ${
-                      car.status === "Available" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                    }`}>
-                      {car.status}
-                    </span>
-                    <h3 className="text-base font-bold text-white leading-tight">{car.name}</h3>
-                  </div>
-                </div>
+        {myCars.length > 0 && (
+          <div className="grid grid-cols-1 gap-6 md:hidden">
+            <AnimatePresence mode="popLayout">
+              {myCars.map((car) => {
+                const carId = car._id || car.id;
+                const name = car.carModel || car.name;
+                const price = car.dailyPrice || car.price;
+                const status = car.availability || car.status;
+                const date = car.dateAdded || new Date(car.createdAt).toLocaleDateString() || "N/A";
 
-                <div className="w-full border-t border-slate-800/60" />
-
-                <div className="grid grid-cols-2 gap-y-2 text-xs font-medium text-slate-400">
-                  <div>
-                    <span className="text-[10px] uppercase text-slate-500 block">Rate / Day</span>
-                    <span className="text-amber-500 font-bold">${car.price}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase text-slate-500 block">Added On</span>
-                    <span className="text-slate-300 font-mono">{car.dateAdded}</span>
-                  </div>
-                </div>
-
-                <div className="w-full border-t border-slate-800/60 pt-3 flex gap-3">
-                  <button 
-                    onClick={() => openEditModal(car)}
-                    className="flex-1 py-2.5 bg-slate-900 border border-slate-800 text-slate-200 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-amber-500/40 hover:text-amber-500 transition-all cursor-pointer flex items-center justify-center gap-2"
+                return (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    key={carId} 
+                    className="bg-[#111827] border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl"
                   >
-                    <FaEdit /> Modify
-                  </button>
-                  <button 
-                    onClick={() => openDeleteModal(car)}
-                    className="flex-1 py-2.5 bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-red-500/30 hover:text-red-400 transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <FaTrashAlt /> Delete
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-20 h-14 bg-slate-800 rounded-xl overflow-hidden border border-slate-800 shrink-0">
+                        <Image src={car.image} alt={name} fill className="object-cover" unoptimized />
+                      </div>
+                      <div className="flex-1">
+                        <span className={`inline-flex px-2 py-0.5 border rounded-md text-[9px] font-mono font-bold uppercase tracking-widest mb-1 ${
+                          status === "Available" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                        }`}>
+                          {status}
+                        </span>
+                        <h3 className="text-base font-bold text-white leading-tight">{name}</h3>
+                      </div>
+                    </div>
+
+                    <div className="w-full border-t border-slate-800/60" />
+
+                    <div className="grid grid-cols-2 gap-y-2 text-xs font-medium text-slate-400">
+                      <div>
+                        <span className="text-[10px] uppercase text-slate-500 block">Rate / Day</span>
+                        <span className="text-amber-500 font-bold">${price}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase text-slate-500 block">Added On</span>
+                        <span className="text-slate-300 font-mono">{date}</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full border-t border-slate-800/60 pt-3 flex gap-3">
+                      <button 
+                        onClick={() => openEditModal(car)}
+                        className="flex-1 py-2.5 bg-slate-900 border border-slate-800 text-slate-200 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-amber-500/40 hover:text-amber-500 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <FaEdit /> Modify
+                      </button>
+                      <button 
+                        onClick={() => openDeleteModal(car)}
+                        className="flex-1 py-2.5 bg-slate-900 border border-slate-800 text-slate-400 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-red-500/30 hover:text-red-400 transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <FaTrashAlt /> Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Empty State */}
         {myCars.length === 0 && (
@@ -332,7 +387,7 @@ const MyAddedCarsPage = () => {
 
               <h2 className="text-xl font-black text-white">Remove Vehicle?</h2>
               <p className="text-xs text-slate-400 mt-2">
-                Are you sure you want to purge <span className="text-red-400 font-bold">{activeCar?.name}</span> from the public fleet? This operation is permanent.
+                Are you sure you want to purge <span className="text-red-400 font-bold">{activeCar?.carModel || activeCar?.name}</span> from the public fleet? This operation is permanent.
               </p>
 
               <div className="flex gap-3 mt-5">
@@ -385,7 +440,7 @@ const MyAddedCarsPage = () => {
                 <FaEdit className="text-amber-500 text-sm" /> Modify Specifications
               </h2>
               <p className="text-[11px] text-slate-400 mt-1">
-                Updating asset logs for ID: <span className="font-mono text-amber-500 font-bold">{activeCar?.id}</span>
+                Updating asset logs for ID: <span className="font-mono text-amber-500 font-bold">{activeCar?._id || activeCar?.id}</span>
               </p>
 
               <form onSubmit={handleEditSubmit} className="space-y-4 mt-5">
