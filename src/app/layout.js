@@ -3,6 +3,8 @@ import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "@/Components/Navbar";
 import Footer from "@/Components/Footer";
+import { AuthProvider } from "@/context/AuthContext"; 
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,11 +22,7 @@ export const metadata = {
   icons: {
     icon: '/logo.png', 
   },
-
 };
-
-
-
 
 export default function RootLayout({ children }) {
   return (
@@ -32,18 +30,23 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-[#090d16]">
+        
+        <AuthProvider>
+          <section>
+            <Navbar />
+          
+          </section>
 
-      <section>
-        <Navbar />
-      </section>
-
-        <main className="pt-20 md:pt-20">
-          {children}
-        </main>
-    <section>
-      <Footer />
-    </section>
+          <main className="pt-20 md:pt-20 flex-grow">
+            {children}
+          </main>
+          
+          <section>
+           
+            <Footer />
+          </section>
+        </AuthProvider>
       </body>
     </html>
   );

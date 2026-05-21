@@ -3,24 +3,36 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { HiMenu, HiX } from "react-icons/hi";
-import { FaCar, FaSignOutAlt, FaPlusCircle, FaBriefcase } from "react-icons/fa";
-
+import { Menu, X, User, Car, LogOut, PlusCircle, Briefcase } from "lucide-react";
+import { useAuth } from "@/context/AuthContext"; 
 import ZippyCarLogo from "./CarLogo/ZippyCarLogo";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
+  
+  const { user, logoutContext, loading } = useAuth();
   const pathname = usePathname();
   const dropdownRef = useRef(null);
 
   const isActive = (route) => pathname === route;
 
-  const user = {
-    name: "Md. Abdus Salam",
-    email: "salam@example.com",
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/auth/logout", { 
+        method: 'POST', 
+        credentials: 'include' 
+      });
+      
+      if (res.ok) {
+        logoutContext(); 
+        setIsProfileOpen(false);
+        setIsOpen(false);
+        window.location.reload(); 
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   useEffect(() => {
@@ -29,11 +41,8 @@ const Navbar = () => {
         setIsProfileOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const navLinks = [
@@ -41,217 +50,178 @@ const Navbar = () => {
     { name: "Explore Cars", path: "/cars" },
   ];
 
-  const dropdownVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: -10 },
-    visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.15, ease: "easeOut" } },
-    exit: { opacity: 0, scale: 0.95, y: -10, transition: { duration: 0.1, ease: "easeIn" } }
-  };
-
-  const mobileContainerVariants = {
-    hidden: { opacity: 0, height: 0 },
-    visible: { opacity: 1, height: "auto", transition: { height: { duration: 0.3, ease: "easeOut" }, staggerChildren: 0.05, delayChildren: 0.05 } },
-    exit: { opacity: 0, height: 0, transition: { height: { duration: 0.2, ease: "easeIn" }, opacity: { duration: 0.1 } } }
-  };
-
-  const mobileItemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-  };
-
   return (
-    /* Fixed: backdrop-blur-xl (v3 standard) */
-    <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.35)] select-none">
-      <div className="pointer-events-none absolute inset-0 bg-white/[0.02]" />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
-
-          {/* Fixed: focus:outline-none (v3 standard) instead of focus:outline-hidden */}
-          <Link href="/" className="group flex items-center focus:outline-none">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="transition-all duration-300">
-              <ZippyCarLogo />
-            </motion.div>
+    <nav className="fixed top-0 left-0 w-full bg-[#0f172a]/95 backdrop-blur-md border-b border-[#334155] z-50 transition-all duration-300 select-none shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          
+          <Link href="/" className="flex items-center space-x-2 focus:outline-none">
+            <ZippyCarLogo />
           </Link>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
-                className={`relative rounded-full px-5 py-2.5 text-sm font-semibold tracking-wide uppercase transition-all duration-300 ${
+                className={`text-sm font-medium tracking-wide uppercase transition-colors duration-200 ${
                   isActive(link.path)
-                    ? "bg-amber-400/10 text-amber-400 shadow-lg shadow-amber-500/10"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                    ? "text-[#f59e0b] font-semibold"
+                    : "text-[#94a3b8] hover:text-[#ffffff]"
                 }`}
               >
-                <span className="relative z-10">{link.name}</span>
-
-                {isActive(link.path) && (
-                  <motion.span 
-                    layoutId="activePillMarker"
-                    className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-amber-400"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
+                {link.name}
               </Link>
             ))}
           </div>
 
-          <div className="relative hidden items-center md:flex" ref={dropdownRef}>
-            {user ? (
+          <div className="hidden md:flex items-center space-x-4 relative" ref={dropdownRef}>
+            {loading ? (
+              <div className="text-slate-500 text-sm">Loading...</div>
+            ) : user ? (
               <div className="relative">
-                <motion.button
+                <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  whileTap={{ scale: 0.98 }}
-                  className="group flex cursor-pointer items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-white backdrop-blur-md transition-all duration-300 hover:border-amber-400/40 hover:bg-white/10 hover:shadow-lg hover:shadow-amber-500/10"
+                  className="flex items-center space-x-2 bg-[#1e293b] border border-[#334155] hover:border-[#f59e0b] px-4 py-2 rounded-full text-[#ffffff] transition-all duration-300 focus:outline-none cursor-pointer"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-sm font-bold text-black shadow-md select-none">
-                    {user.name.charAt(0)}
+                  <div className="w-6 h-6 rounded-full bg-[#f59e0b] flex items-center justify-center text-black font-bold text-xs uppercase">
+                    {user.name ? user.name.charAt(0) : "U"}
                   </div>
-                  <span className="max-w-[140px] truncate text-sm font-medium text-slate-200">
-                    {user.name}
-                  </span>
-                </motion.button>
+                  <span className="text-sm max-w-[120px] truncate">{user.name}</span>
+                </button>
 
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div 
-                      variants={dropdownVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="absolute right-0 mt-4 w-64 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/40"
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-[#0f172a] border border-[#334155] rounded-xl shadow-2xl py-2 z-50">
+                    <div className="px-4 py-2 border-b border-[#334155]">
+                      <p className="text-xs text-[#94a3b8]">Logged in as</p>
+                      <p className="text-sm font-semibold text-[#ffffff] truncate">{user.email}</p>
+                    </div>
+                    
+                    <Link
+                      href="/add-car"
+                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
                     >
-                      <div className="border-b border-white/10 bg-white/[0.03] px-5 py-4">
-                        <p className="text-xs uppercase tracking-wider text-slate-400">Logged in as</p>
-                        <p className="mt-1 truncate text-sm font-semibold text-white">{user.email}</p>
-                      </div>
+                      <PlusCircle size={16} />
+                      <span>Add Car</span>
+                    </Link>
+                    
+                    <Link
+                      href="/my-bookings"
+                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Briefcase size={16} />
+                      <span>My Bookings</span>
+                    </Link>
 
-                      <div className="p-2">
-                        {[
-                          { name: "Add Car", path: "/add-car", icon: <FaPlusCircle /> },
-                          { name: "My Bookings", path: "/my-bookings", icon: <FaBriefcase /> },
-                          { name: "My Added Cars", path: "/my-added-cars", icon: <FaCar /> }
-                        ].map((item) => (
-                          <Link
-                            key={item.path}
-                            href={item.path}
-                            onClick={() => setIsProfileOpen(false)}
-                            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/5 hover:text-amber-400"
-                          >
-                            <span className="text-base">{item.icon}</span>
-                            <span>{item.name}</span>
-                          </Link>
-                        ))}
+                    <Link
+                      href="/my-added-cars"
+                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Car size={16} />
+                      <span>My Added Cars</span>
+                    </Link>
 
-                        <div className="my-2 border-t border-white/10" />
-
-                        <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-red-400 transition-all duration-200 hover:bg-red-500/10 hover:text-red-300">
-                          <FaSignOutAlt className="text-base" />
-                          <span>Logout</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    <div className="border-t border-[#334155] mt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-red-400 hover:bg-[#1e293b] transition-colors text-left"
+                      >
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                <Link
-                  href="/login"
-                  className="rounded-xl bg-amber-400 px-6 py-3 text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-amber-500/20 transition-all duration-300 hover:bg-amber-500"
-                >
-                  Login
-                </Link>
-              </motion.div>
+              <Link
+                href="/login"
+                className="bg-[#f59e0b] text-[#000000] font-bold text-sm tracking-wide uppercase px-6 py-2.5 rounded-lg hover:bg-[#d97706] transition-all duration-300 shadow-md shadow-[#f59e0b]/20"
+              >
+                Login
+              </Link>
             )}
           </div>
 
-          <div className="md:hidden">
-            <motion.button
+          <div className="md:hidden flex items-center">
+            <button
               onClick={() => setIsOpen(!isOpen)}
-              whileTap={{ scale: 0.95 }}
-              className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition-all duration-300 hover:bg-white/10 hover:text-white cursor-pointer"
+              className="text-[#94a3b8] hover:text-[#ffffff] p-2 focus:outline-none"
             >
-              {isOpen ? <HiX size={24} /> : <HiMenu size={24} />}
-            </motion.button>
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
-
         </div>
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            variants={mobileContainerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="border-t border-white/10 bg-slate-950/95 backdrop-blur-xl md:hidden overflow-hidden"
-          >
-            <div className="space-y-2 px-4 py-5">
-              {navLinks.map((link) => (
-                <motion.div key={link.path} variants={mobileItemVariants}>
-                  <Link
-                    href={link.path}
-                    onClick={() => setIsOpen(false)}
-                    className={`block rounded-xl px-4 py-3 text-base font-medium transition-all duration-300 ${
-                      isActive(link.path)
-                        ? "bg-amber-400/10 text-amber-400"
-                        : "text-slate-300 hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                </motion.div>
-              ))}
-
-              {user ? (
-                <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-                  <motion.div variants={mobileItemVariants} className="rounded-xl bg-white/5 px-4 py-3">
-                    <p className="truncate text-sm font-semibold text-white">{user.name}</p>
-                    <p className="truncate text-xs text-slate-400">{user.email}</p>
-                  </motion.div>
-
-                  {[
-                    { name: "Add Car", path: "/add-car", icon: <FaPlusCircle /> },
-                    { name: "My Bookings", path: "/my-bookings", icon: <FaBriefcase /> },
-                    { name: "My Added Cars", path: "/my-added-cars", icon: <FaCar /> }
-                  ].map((item) => (
-                    <motion.div key={item.path} variants={mobileItemVariants}>
-                      <Link
-                        href={item.path}
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-slate-300 transition-all duration-300 hover:bg-white/5 hover:text-amber-400"
-                      >
-                        {item.icon}
-                        <span>{item.name}</span>
-                      </Link>
-                    </motion.div>
-                  ))}
-
-                  <motion.div variants={mobileItemVariants}>
-                    <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left text-red-400 transition-all duration-300 hover:bg-red-500/10">
-                      <FaSignOutAlt />
-                      <span>Logout</span>
-                    </button>
-                  </motion.div>
+      {isOpen && (
+        <div className="md:hidden bg-[#0f172a] border-b border-[#334155] px-4 pt-2 pb-6 space-y-2">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              href={link.path}
+              className={`block px-3 py-2 rounded-md text-base font-medium ${
+                isActive(link.path)
+                  ? "bg-[#1e293b] text-[#f59e0b]"
+                  : "text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#ffffff]"
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              {link.name}
+            </Link>
+          ))}
+          
+          {!loading && (
+            user ? (
+              <div className="pt-4 border-t border-[#334155] space-y-1">
+                <div className="px-3 py-2 text-sm text-[#ffffff] font-semibold bg-[#1e293b] rounded-md mb-2 truncate">
+                  {user.name} ({user.email})
                 </div>
-              ) : (
-                <motion.div variants={mobileItemVariants} className="mt-4 border-t border-white/10 pt-4">
-                  <Link
-                    href="/login"
-                    onClick={() => setIsOpen(false)}
-                    className="block rounded-xl bg-amber-400 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-amber-500/20 transition-all duration-300 hover:bg-amber-500"
-                  >
-                    Login
-                  </Link>
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <Link
+                  href="/add-car"
+                  className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Add Car
+                </Link>
+                <Link
+                  href="/my-bookings"
+                  className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]"
+                  onClick={() => setIsOpen(false)}
+                >
+                  My Bookings
+                </Link>
+                <Link
+                  href="/my-added-cars"
+                  className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]"
+                  onClick={() => setIsOpen(false)}
+                >
+                  My Added Cars
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left block px-3 py-2 text-base font-medium text-red-400 hover:bg-[#1e293b]"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="pt-4 border-t border-[#334155]">
+                <Link
+                  href="/login"
+                  className="block text-center bg-[#f59e0b] text-[#000000] font-bold px-4 py-2.5 rounded-lg text-base tracking-wide uppercase"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Login
+                </Link>
+              </div>
+            )
+          )}
+        </div>
+      )}
     </nav>
   );
 };

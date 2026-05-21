@@ -17,6 +17,7 @@ const LoginPage = () => {
 
   const router = useRouter();
 
+  // Custom UI validation function
   const validateForm = () => {
     const errors = {};
     
@@ -33,12 +34,13 @@ const LoginPage = () => {
     return Object.keys(errors).length === 0;
   };
 
+  // Handle standard credentials login
   const handleLogin = async (e) => {
     e.preventDefault();
     
     const isValid = validateForm();
     if (!isValid) {
-      // Show colorful error toast if form is empty
+      // Show colorful error toast if form validation fails
       toast.error("Please fix the errors in the form!"); 
       return;
     }
@@ -51,6 +53,7 @@ const LoginPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Essential for receiving and storing httpOnly cookies
         body: JSON.stringify({ email, password }),
       });
 
@@ -62,29 +65,35 @@ const LoginPage = () => {
 
       // Show bright and colorful success toast on successful login
       toast.success("Login successful! Welcome back.");
-      
+    
+      // Clear form states safely
       setEmail("");
       setPassword("");
       setFieldErrors({});
 
+      // Allow toast animation to finish before handling page redirect and hard refresh
       setTimeout(() => {
-        router.push("/");
+        window.location.href = "/"; // Force a full reload to reset auth contexts/navbar states globally
       }, 1500);
 
     } catch (err) {
-      // Show bright red toast for any backend or other errors
+      // Show bright red toast for any backend or server errors
       toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Google OAuth authentication trigger
+  const handleGoogleAuth = () => {
+    // Redirects the client window directly to the backend Google login gateway
+    window.location.href = "http://localhost:8000/api/auth/google";
+  };
+
   return (
     <div className="min-h-screen bg-[#090d16] text-white flex items-center justify-center px-4 pt-24 pb-12 relative overflow-hidden select-none">
       
-      {/* —————————————————————————————————————————————————————————— */}
-      {/* Using theme="colored" to make toasts attractive and colorful */}
-      {/* —————————————————————————————————————————————————————————— */}
+      {/* Toast container configuration using explicit colored theme */}
       <ToastContainer 
         position="top-right" 
         autoClose={3000} 
@@ -182,9 +191,11 @@ const LoginPage = () => {
           <span className="relative bg-[#111827] px-3 text-xs text-slate-500 uppercase tracking-widest">Or Continue With</span>
         </div>
 
-        {/* Google Login */}
+        {/* Google Login Button */}
         <motion.button  
           whileTap={{ scale: 0.98 }}
+          type="button" // Explicitly explicitly defined to avoid triggers with form submission
+          onClick={handleGoogleAuth}
           className="w-full py-3.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 font-semibold text-sm rounded-xl transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer shadow-md"
         >
           <FaGoogle className="text-amber-500" /> Google Account

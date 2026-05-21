@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; 
-import { motion, AnimatePresence } from "framer-motion"; // AnimatePresence added for smooth hide/show
+import { motion, AnimatePresence } from "framer-motion"; 
 import { FaUser, FaEnvelope, FaLock, FaGoogle, FaArrowLeft, FaImage } from "react-icons/fa";
 
 const RegisterPage = () => {
@@ -20,28 +20,36 @@ const RegisterPage = () => {
 
   const router = useRouter();
 
-  // Custom UI validation function
+  // Custom UI validation function matching CAT_05 Assignment criteria
   const validateForm = () => {
     const errors = {};
     
     if (!name.trim()) {
       errors.name = "Full Name is required";
     }
+    
     if (!email.trim()) {
       errors.email = "Email Address is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       errors.email = "Please enter a valid email address";
     }
+    
+    // --- Password Validation Rules (CAT_05 Requirements) ---
     if (!password) {
       errors.password = "Password is required";
     } else if (password.length < 6) {
       errors.password = "Password must be at least 6 characters long";
+    } else if (!/[A-Z]/.test(password)) {
+      errors.password = "Password must contain at least one uppercase letter (A-Z)";
+    } else if (!/[a-z]/.test(password)) {
+      errors.password = "Password must contain at least one lowercase letter (a-z)";
     }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
+  // Handle standard credentials registration
   const handleRegister = async (e) => {
     e.preventDefault();
     setServerError("");
@@ -83,8 +91,13 @@ const RegisterPage = () => {
     } catch (err) {
       setServerError(err.message);
     } finally {
-      setLoading(false);
+      loading && setLoading(false);
     }
+  };
+
+  // Handle Google OAuth authentication trigger
+  const handleGoogleAuth = () => {
+    window.location.href = "http://localhost:8000/api/auth/google";
   };
 
   return (
@@ -110,7 +123,7 @@ const RegisterPage = () => {
             Create <span className="text-amber-500">Account</span>
           </h2>
           <p className="text-xs text-slate-400 mt-2">
-            Join ZippyCar today to unlock premium rentals instantly.
+            Join DriveFleet today to unlock premium rentals instantly.
           </p>
         </div>
 
@@ -186,11 +199,8 @@ const RegisterPage = () => {
             )}
           </div>
 
-          {/* —————————————————————————————————————————————————————————— */}
-          {/* Custom message area just above the button (with animation) */}
-          {/* —————————————————————————————————————————————————————————— */}
+          {/* Backend Status Alerts Messages */}
           <AnimatePresence mode="wait">
-            {/* If an error comes from the backend */}
             {serverError && (
               <motion.div 
                 initial={{ opacity: 0, y: -8 }}
@@ -204,7 +214,6 @@ const RegisterPage = () => {
               </motion.div>
             )}
 
-            {/* If registration is successful */}
             {success && (
               <motion.div 
                 initial={{ opacity: 0, y: -8 }}
@@ -236,9 +245,11 @@ const RegisterPage = () => {
           <span className="relative bg-[#111827] px-3 text-xs text-slate-500 uppercase tracking-widest">Or Register With</span>
         </div>
 
-        {/* Google Login */}
+        {/* Google Authentication Button */}
         <motion.button 
           whileTap={{ scale: 0.98 }}
+          type="button" 
+          onClick={handleGoogleAuth}
           className="w-full py-3.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 font-semibold text-sm rounded-xl transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer shadow-md"
         >
           <FaGoogle className="text-amber-500" /> Google Account
