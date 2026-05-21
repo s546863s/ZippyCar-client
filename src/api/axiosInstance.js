@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api', // Your backend URL
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`, // Your backend URL
   withCredentials: true, // Crucial for reading HTTP-Only cookies on client-side requests
 });
 

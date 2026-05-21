@@ -15,7 +15,9 @@ import {
   FaHashtag,
   FaCheckCircle,
   FaHome,
-  FaPlusCircle
+  FaPlusCircle,
+  FaExclamationTriangle,
+  FaImage
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,14 +41,86 @@ const AddCarPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState(false);
+  const [urlError, setUrlError] = useState("");
+
+  // URL validation function
+  const isValidImageUrl = (url) => {
+    if (!url || url.trim() === "") return false;
+    
+    try {
+      const urlObj = new URL(url);
+      
+      // Check if protocol is http or https
+      if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+        return false;
+      }
+      
+      // Check if hostname is valid (not empty and not just a file extension)
+      if (!urlObj.hostname || urlObj.hostname.length < 3) {
+        return false;
+      }
+      
+      // Check if URL has common image extensions or looks like an image URL
+      const imageExtensions = /\.(jpg|jpeg|png|webp|avif|gif|svg|bmp)(\?.*)?$/i;
+      const hasImageExt = imageExtensions.test(urlObj.pathname);
+      
+      // Also allow URLs that might have image paths without extensions
+      const hasImagePath = /\/image|\/photo|\/img|\/pics|\/uploads|\/images/i.test(urlObj.pathname);
+      
+      return hasImageExt || hasImagePath;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Check if URL is accessible
+  const checkImageUrl = async (url) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
+    
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Clear image preview and errors when URL changes
+    if (name === "image") {
+      setImagePreview(null);
+      setImageError(false);
+      setUrlError("");
+      
+      if (value && value.trim() !== "") {
+        // Validate URL format first
+        if (isValidImageUrl(value)) {
+          // Test if image loads
+          const img = new Image();
+          img.onload = () => {
+            setImagePreview(value);
+            setImageError(false);
+            setUrlError("");
+          };
+          img.onerror = () => {
+            setImagePreview(null);
+            setImageError(true);
+            setUrlError("Image URL is not accessible or invalid");
+          };
+          img.src = value;
+        } else if (value && value.trim() !== "") {
+          setUrlError("Please enter a valid image URL (http:// or https://)");
+          setImageError(true);
+        }
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -54,6 +128,24 @@ const AddCarPage = () => {
 
     if (!user?.email) {
       toast.error("Please log in to add a car!");
+      return;
+    }
+
+    // Validate image URL before submission
+    if (!formData.image || formData.image.trim() === "") {
+      toast.error("Please provide an image URL for the car!");
+      return;
+    }
+
+    if (!isValidImageUrl(formData.image)) {
+      toast.error("Please provide a valid image URL (must start with http:// or https://)");
+      return;
+    }
+
+    // Check if image is accessible
+    const isImageAccessible = await checkImageUrl(formData.image);
+    if (!isImageAccessible) {
+      toast.error("The image URL is not accessible. Please provide a working image URL.");
       return;
     }
 
@@ -77,7 +169,7 @@ const AddCarPage = () => {
       };
 
       const response = await fetch(
-        "http://localhost:8000/api/cars/add",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/cars/add`,
         {
           method: "POST",
           headers: {
@@ -96,6 +188,7 @@ const AddCarPage = () => {
       toast.success("Car added successfully!");
       setShowModal(true);
 
+      // Reset form
       setFormData({
         carModel: "",
         brand: "",
@@ -108,6 +201,9 @@ const AddCarPage = () => {
         image: "",
         description: "",
       });
+      setImagePreview(null);
+      setImageError(false);
+      setUrlError("");
     } catch (err) {
       toast.error(err.message || "Something went wrong!");
     } finally {
@@ -143,7 +239,7 @@ const AddCarPage = () => {
           </h1>
 
           <p className="text-slate-400 mt-2 text-sm">
-            Fill out the details to add your car.
+            Fill out the details to add your car
           </p>
         </div>
 
@@ -305,9 +401,10 @@ const AddCarPage = () => {
               </div>
             </div>
 
+            {/* Image URL Field with Preview */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
-                Image URL
+                Image URL *
               </label>
               <div className="relative">
                 <FaCloudUploadAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-base" />
@@ -317,10 +414,59 @@ const AddCarPage = () => {
                   required
                   value={formData.image}
                   onChange={handleChange}
-                  placeholder="https://example.com/car.jpg"
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-amber-500/40 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200"
+                  placeholder="https://example.com/car-image.jpg"
+                  className={`w-full bg-slate-900 border rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200 ${
+                    urlError ? 'border-red-500 focus:border-red-500' : 'border-slate-800 focus:border-amber-500/40'
+                  }`}
                 />
               </div>
+              
+              {/* URL Error Message */}
+              {urlError && (
+                <div className="flex items-center gap-2 text-red-400 text-xs mt-1">
+                  <FaExclamationTriangle className="text-xs" />
+                  <span>{urlError}</span>
+                </div>
+              )}
+
+              {/* Image Preview */}
+              {imagePreview && !imageError && (
+                <div className="mt-3 p-3 bg-slate-900 rounded-xl border border-slate-700">
+                  <div className="flex items-center gap-3 mb-2">
+                    <FaImage className="text-amber-500 text-sm" />
+                    <span className="text-xs text-slate-400">Image Preview</span>
+                  </div>
+                  <div className="relative w-full h-40 rounded-lg overflow-hidden bg-slate-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        setImageError(true);
+                        setImagePreview(null);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Image Error Message */}
+              {imageError && formData.image && !urlError && (
+                <div className="mt-3 p-3 bg-red-900/20 border border-red-500/30 rounded-xl">
+                  <div className="flex items-center gap-2 text-red-400 text-xs">
+                    <FaExclamationTriangle />
+                    <span>Could not load image from this URL. Please check the URL and try again.</span>
+                  </div>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Tips: Use direct image URLs from trusted sources like Imgur, Cloudinary, or other image hosting services.
+                  </p>
+                </div>
+              )}
+
+              <p className="text-slate-500 text-xs mt-1">
+                * Provide a valid image URL (must start with http:// or https://)
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -340,10 +486,10 @@ const AddCarPage = () => {
 
             <motion.button
               whileTap={{ scale: 0.98 }}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!urlError || imageError}
               type="submit"
               className={`w-full py-4 text-sm font-extrabold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
-                isSubmitting
+                isSubmitting || urlError || imageError
                   ? "bg-slate-800 text-slate-500 cursor-not-allowed"
                   : "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/10 cursor-pointer"
               }`}

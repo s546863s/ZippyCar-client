@@ -25,7 +25,7 @@ const CarsPage = () => {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/cars");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cars`);
 
         const data = await response.json();
 

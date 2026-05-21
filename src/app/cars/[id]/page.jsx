@@ -47,7 +47,7 @@ const CarDetailsPage = () => {
     const fetchCarDetails = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/cars/${id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/cars/${id}`
         );
 
         const data = await response.json();
@@ -123,7 +123,7 @@ const CarDetailsPage = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/bookings/add",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/bookings/add`,
         {
           method: "POST",
           headers: {

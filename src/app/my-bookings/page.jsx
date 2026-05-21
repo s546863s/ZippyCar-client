@@ -21,7 +21,7 @@ const MyBookingsPage = () => {
 
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:8000/api/bookings/my-bookings?email=${user.email}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/my-bookings?email=${user.email}`);
         const data = await response.json();
 
         if (response.ok) {

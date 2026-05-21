@@ -48,7 +48,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/auth/login", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +87,7 @@ const LoginPage = () => {
   // Handle Google OAuth authentication trigger
   const handleGoogleAuth = () => {
     // Redirects the client window directly to the backend Google login gateway
-    window.location.href = "http://localhost:8000/api/auth/google";
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
   };
 
   return (
