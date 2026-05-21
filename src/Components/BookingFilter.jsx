@@ -1,122 +1,56 @@
 "use client";
 
-import React from "react";
-// Integrating react-hook-form for elite performance with zero re-renders
-import { useForm } from "react-hook-form";
-// Framer motion for hardware-accelerated fluid motion transitions
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-// HeroUI wrappers for streamlined accessible buttons
-import { Button } from "@heroui/react";
-// Pure Gravity UI icons
-import { MapPin, Calendar, Magnifier } from "@gravity-ui/icons";
+import { MapPin, Calendar, Search } from "lucide-react";
 
 const BookingFilter = () => {
-  // Setup React Hook Form
-  const { register, handleSubmit } = useForm({
-    defaultValues: {
-      location: "",
-      pickupDate: "",
-      dropoffDate: "",
-    }
-  });
+  const router = useRouter();
+  const [location, setLocation] = useState("");
+  const [pickupDate, setPickupDate] = useState("");
+  const [dropoffDate, setDropoffDate] = useState("");
 
-  const onSubmit = (data) => {
-    console.log("Animated Search Context Submitted:", data);
-  };
-
-  // Animation variants for the inner input cards on hover/focus
-  const inputHoverVariants = {
-    initial: { scale: 1, y: 0 },
-    hover: { 
-      scale: 1.015, 
-      y: -2,
-      transition: { duration: 0.2, ease: "easeOut" } 
-    }
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (location) params.append("location", location);
+    if (pickupDate) params.append("pickupDate", pickupDate);
+    if (dropoffDate) params.append("dropoffDate", dropoffDate);
+    router.push(`/cars?${params.toString()}`);
   };
 
   return (
-    <motion.div 
-      className="max-w-6xl mx-auto px-4 relative -mt-8 sm:-mt-12 z-20"
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
-      <div className="bg-[#111827] border border-slate-800 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6)] p-6 lg:p-8 transform-gpu">
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
-          
-          {/* Input Box: Pickup Location with micro-interactions */}
-          <motion.div 
-            className="space-y-2"
-            variants={inputHoverVariants}
-            initial="initial"
-            whileHover="hover"
-          >
-            <label className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5 select-none">
-              <MapPin width={14} height={14} className="text-amber-500 animate-pulse" /> Pick-up Location
+    <motion.div className="max-w-6xl mx-auto px-4 relative -mt-8 sm:-mt-12 z-20" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6)] p-6 lg:p-8">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+              <MapPin size={14} className="text-amber-500" /> Pick-up Location
             </label>
-            <div className="relative">
-              <select 
-                {...register("location")}
-                className="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 focus:border-amber-500 text-white text-sm rounded-xl px-4 py-3.5 focus:outline-hidden transition-all duration-200 cursor-pointer appearance-none transform-gpu"
-              >
-                <option value="" className="bg-[#111827]">Select Division...</option>
-                <option value="rajshahi" className="bg-[#111827]">Rajshahi Division</option>
-                <option value="dhaka" className="bg-[#111827]">Dhaka Division</option>
-                <option value="chittagong" className="bg-[#111827]">Chattogram Division</option>
-              </select>
-              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500 text-xs">▼</div>
-            </div>
-          </motion.div>
-
-          {/* Input Box: Pickup Date */}
-          <motion.div 
-            className="space-y-2"
-            variants={inputHoverVariants}
-            initial="initial"
-            whileHover="hover"
-          >
-            <label className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5 select-none">
-              <Calendar width={14} height={14} className="text-amber-500" /> Pick-up Date
+            <select value={location} onChange={(e) => setLocation(e.target.value)} className="w-full bg-slate-800 border border-slate-700 focus:border-amber-500 text-white text-sm rounded-xl px-4 py-3.5 focus:outline-none transition-all duration-200 cursor-pointer">
+              <option value="">Select Division...</option>
+              <option value="rajshahi">Rajshahi Division</option>
+              <option value="dhaka">Dhaka Division</option>
+              <option value="chittagong">Chattogram Division</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Calendar size={14} className="text-amber-500" /> Pick-up Date
             </label>
-            <input 
-              type="date" 
-              {...register("pickupDate")}
-              className="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 focus:border-amber-500 text-white text-sm rounded-xl px-4 py-3 [color-scheme:dark] focus:outline-hidden transition-all duration-200 cursor-pointer transform-gpu"
-            />
-          </motion.div>
-
-          {/* Input Box: Drop-off Date */}
-          <motion.div 
-            className="space-y-2"
-            variants={inputHoverVariants}
-            initial="initial"
-            whileHover="hover"
-          >
-            <label className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5 select-none">
-              <Calendar width={14} height={14} className="text-amber-500" /> Drop-off Date
+            <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)} className="w-full bg-slate-800 border border-slate-700 focus:border-amber-500 text-white text-sm rounded-xl px-4 py-3 [color-scheme:dark] focus:outline-none transition-all duration-200 cursor-pointer" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Calendar size={14} className="text-amber-500" /> Drop-off Date
             </label>
-            <input 
-              type="date" 
-              {...register("dropoffDate")}
-              className="w-full bg-slate-800 hover:bg-slate-750 border border-slate-700 focus:border-amber-500 text-white text-sm rounded-xl px-4 py-3 [color-scheme:dark] focus:outline-hidden transition-all duration-200 cursor-pointer transform-gpu"
-            />
-          </motion.div>
-
-          {/* Call-to-action Button with scale feedback */}
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="w-full"
-          >
-            <Button 
-              type="submit" 
-              className="w-full h-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl py-3.5 px-6 transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_20px_-5px_rgba(245,158,11,0.25)] cursor-pointer group"
-            >
-              <Magnifier width={16} height={16} className="group-hover:rotate-12 transition-transform duration-200" />
-              Find Best Deal
-            </Button>
-          </motion.div>
-
+            <input type="date" value={dropoffDate} onChange={(e) => setDropoffDate(e.target.value)} className="w-full bg-slate-800 border border-slate-700 focus:border-amber-500 text-white text-sm rounded-xl px-4 py-3 [color-scheme:dark] focus:outline-none transition-all duration-200 cursor-pointer" />
+          </div>
+          <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl py-3.5 px-6 transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_20px_-5px_rgba(245,158,11,0.25)] cursor-pointer group">
+            <Search size={16} className="group-hover:rotate-12 transition-transform duration-200" />
+            Find Best Deal
+          </button>
         </form>
       </div>
     </motion.div>

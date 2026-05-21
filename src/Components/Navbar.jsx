@@ -2,38 +2,27 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, User, Car, LogOut, PlusCircle, Briefcase } from "lucide-react";
-import { useAuth } from "@/context/AuthContext"; 
+import { useAuth } from "@/context/AuthContext";
 import ZippyCarLogo from "./CarLogo/ZippyCarLogo";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
-  const { user, logoutContext, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const dropdownRef = useRef(null);
 
   const isActive = (route) => pathname === route;
 
   const handleLogout = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/api/auth/logout", { 
-        method: 'POST', 
-        credentials: 'include' 
-      });
-      
-      if (res.ok) {
-        logoutContext(); 
-        setIsProfileOpen(false);
-        setIsOpen(false);
-        window.location.reload(); 
-         window.location.href = "/"; 
-      }
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    await logout();
+    setIsProfileOpen(false);
+    setIsOpen(false);
+    router.push("/");
+    router.refresh();
   };
 
   useEffect(() => {
@@ -49,17 +38,18 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Explore Cars", path: "/cars" },
+    { name: "About", path: "/about" },
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-[#0f172a]/95 backdrop-blur-md border-b border-[#334155] z-50 transition-all duration-300 select-none shadow-lg">
+    <nav className="fixed top-0 left-0 w-full bg-[#0f172a]/95 backdrop-blur-md border-b border-[#334155] z-50 transition-all duration-300 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          
-          <Link href="/" className="flex items-center space-x-2 focus:outline-none">
+          <Link href="/" className="focus:outline-none">
             <ZippyCarLogo />
           </Link>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -76,6 +66,7 @@ const Navbar = () => {
             ))}
           </div>
 
+          {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4 relative" ref={dropdownRef}>
             {loading ? (
               <div className="text-slate-500 text-sm">Loading...</div>
@@ -98,38 +89,23 @@ const Navbar = () => {
                       <p className="text-sm font-semibold text-[#ffffff] truncate">{user.email}</p>
                     </div>
                     
-                    <Link
-                      href="/add-car"
-                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
+                    <Link href="/add-car" className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors" onClick={() => setIsProfileOpen(false)}>
                       <PlusCircle size={16} />
                       <span>Add Car</span>
                     </Link>
                     
-                    <Link
-                      href="/my-bookings"
-                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
+                    <Link href="/my-bookings" className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors" onClick={() => setIsProfileOpen(false)}>
                       <Briefcase size={16} />
                       <span>My Bookings</span>
                     </Link>
 
-                    <Link
-                      href="/my-added-cars"
-                      className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
+                    <Link href="/my-added-cars" className="flex items-center space-x-2 px-4 py-2.5 text-sm text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b] transition-colors" onClick={() => setIsProfileOpen(false)}>
                       <Car size={16} />
                       <span>My Added Cars</span>
                     </Link>
 
                     <div className="border-t border-[#334155] mt-1">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-red-400 hover:bg-[#1e293b] transition-colors text-left"
-                      >
+                      <button onClick={handleLogout} className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-red-400 hover:bg-[#1e293b] transition-colors text-left">
                         <LogOut size={16} />
                         <span>Logout</span>
                       </button>
@@ -138,39 +114,26 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="bg-[#f59e0b] text-[#000000] font-bold text-sm tracking-wide uppercase px-6 py-2.5 rounded-lg hover:bg-[#d97706] transition-all duration-300 shadow-md shadow-[#f59e0b]/20"
-              >
+              <Link href="/login" className="bg-[#f59e0b] text-[#000000] font-bold text-sm tracking-wide uppercase px-6 py-2.5 rounded-lg hover:bg-[#d97706] transition-all duration-300 shadow-md shadow-[#f59e0b]/20">
                 Login
               </Link>
             )}
           </div>
 
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-[#94a3b8] hover:text-[#ffffff] p-2 focus:outline-none"
-            >
+            <button onClick={() => setIsOpen(!isOpen)} className="text-[#94a3b8] hover:text-[#ffffff] p-2 focus:outline-none">
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-[#0f172a] border-b border-[#334155] px-4 pt-2 pb-6 space-y-2">
           {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              href={link.path}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive(link.path)
-                  ? "bg-[#1e293b] text-[#f59e0b]"
-                  : "text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#ffffff]"
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
+            <Link key={link.path} href={link.path} className={`block px-3 py-2 rounded-md text-base font-medium ${isActive(link.path) ? "bg-[#1e293b] text-[#f59e0b]" : "text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#ffffff]"}`} onClick={() => setIsOpen(false)}>
               {link.name}
             </Link>
           ))}
@@ -181,43 +144,14 @@ const Navbar = () => {
                 <div className="px-3 py-2 text-sm text-[#ffffff] font-semibold bg-[#1e293b] rounded-md mb-2 truncate">
                   {user.name} ({user.email})
                 </div>
-                <Link
-                  href="/add-car"
-                  className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Add Car
-                </Link>
-                <Link
-                  href="/my-bookings"
-                  className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]"
-                  onClick={() => setIsOpen(false)}
-                >
-                  My Bookings
-                </Link>
-                <Link
-                  href="/my-added-cars"
-                  className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]"
-                  onClick={() => setIsOpen(false)}
-                >
-                  My Added Cars
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left block px-3 py-2 text-base font-medium text-red-400 hover:bg-[#1e293b]"
-                >
-                  Logout
-                </button>
+                <Link href="/add-car" className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]" onClick={() => setIsOpen(false)}>Add Car</Link>
+                <Link href="/my-bookings" className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]" onClick={() => setIsOpen(false)}>My Bookings</Link>
+                <Link href="/my-added-cars" className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]" onClick={() => setIsOpen(false)}>My Added Cars</Link>
+                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 text-base font-medium text-red-400 hover:bg-[#1e293b]">Logout</button>
               </div>
             ) : (
               <div className="pt-4 border-t border-[#334155]">
-                <Link
-                  href="/login"
-                  className="block text-center bg-[#f59e0b] text-[#000000] font-bold px-4 py-2.5 rounded-lg text-base tracking-wide uppercase"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Login
-                </Link>
+                <Link href="/login" className="block text-center bg-[#f59e0b] text-[#000000] font-bold px-4 py-2.5 rounded-lg text-base tracking-wide uppercase" onClick={() => setIsOpen(false)}>Login</Link>
               </div>
             )
           )}

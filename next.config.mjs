@@ -1,19 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  reactCompiler: true,
   images: {
     remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: '**',
-      },
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http', hostname: 'localhost', port: '8000' },
     ],
   },
+  env: { NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL },
 };
 
 export default nextConfig;

@@ -2,211 +2,79 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaEnvelope, FaLock, FaGoogle, FaArrowLeft } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify"; 
-import "react-toastify/dist/ReactToastify.css"; 
+import { Mail, Lock, LogIn, Car } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "@/api/axiosInstance";
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { setUser } = useAuth();
 
-  // Custom UI validation function
-  const validateForm = () => {
-    const errors = {};
-    
-    if (!email.trim()) {
-      errors.email = "Email Address is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errors.email = "Please enter a valid email address";
-    }
-    if (!password) {
-      errors.password = "Password is required";
-    }
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Handle standard credentials login
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    const isValid = validateForm();
-    if (!isValid) {
-      // Show colorful error toast if form validation fails
-      toast.error("Please fix the errors in the form!"); 
-      return;
-    }
-
-    setLoading(true);
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Essential for receiving and storing httpOnly cookies
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Invalid email or password!");
+      const response = await axiosInstance.post("/api/auth/login", { email, password });
+      
+      if (response.data.success) {
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+        }
+        setUser(response.data.user);
+        toast.success("Login successful!");
+        router.push("/");
       }
-
-      // Show bright and colorful success toast on successful login
-      toast.success("Login successful! Welcome back.");
-    
-      // Clear form states safely
-      setEmail("");
-      setPassword("");
-      setFieldErrors({});
-
-      // Allow toast animation to finish before handling page redirect and hard refresh
-      setTimeout(() => {
-        window.location.href = "/"; // Force a full reload to reset auth contexts/navbar states globally
-      }, 1500);
-
-    } catch (err) {
-      // Show bright red toast for any backend or server errors
-      toast.error(err.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed!");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
-
-  // Handle Google OAuth authentication trigger
-  const handleGoogleAuth = () => {
-    // Redirects the client window directly to the backend Google login gateway
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-white flex items-center justify-center px-4 pt-24 pb-12 relative overflow-hidden select-none">
+    <div className="min-h-screen bg-[#090d16] flex items-center justify-center px-4 py-20">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
       
-      {/* Toast container configuration using explicit colored theme */}
-      <ToastContainer 
-        position="top-right" 
-        autoClose={3000} 
-        theme="colored" 
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-
-      {/* Decorative Background Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff01_1px,transparent_1px),linear-gradient(to_bottom,#ffffff01_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-
-      <motion.div  
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full bg-[#111827] border border-slate-800 rounded-2xl p-8 shadow-2xl z-10"
-      >
-        {/* Back Link */}
-        <Link href="/" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-amber-500 transition-colors mb-6 group">
-          <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Back to Home
-        </Link>
-
-        {/* Heading */}
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Welcome <span className="text-amber-500">Back</span>
-          </h2>
-          <p className="text-xs text-slate-400 mt-2">
-            Enter your credentials to access your luxury garage.
-          </p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full bg-[#111827] border border-slate-800 rounded-2xl p-8 shadow-2xl z-10">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Car className="text-amber-500 text-2xl" size={28} />
+          </div>
+          <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
+          <p className="text-slate-400 text-sm mt-2">Sign in to your ZippyCar account</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleLogin} noValidate className="space-y-5">
-          
-          {/* Email Input */}
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Email Address</label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
             <div className="relative">
-              <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-              <input  
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className={`w-full bg-slate-900/60 border ${fieldErrors.email ? 'border-red-500/50 focus:border-red-500' : 'border-slate-800 focus:border-amber-500/50'} rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200`}
-              />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-xl pl-10 pr-4 py-3 text-white outline-none transition-colors" placeholder="your@email.com" />
             </div>
-            {fieldErrors.email && (
-              <p className="text-xs text-red-400 font-medium pl-1">{fieldErrors.email}</p>
-            )}
           </div>
 
-          {/* Password Input */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Password</label>
-              <a href="#" className="text-xs text-amber-500/80 hover:text-amber-400 transition-colors">Forgot?</a>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
             <div className="relative">
-              <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm" />
-              <input  
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className={`w-full bg-slate-900/60 border ${fieldErrors.password ? 'border-red-500/50 focus:border-red-500' : 'border-slate-800 focus:border-amber-500/50'} rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder-slate-600 outline-none transition-all duration-200`}
-              />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-xl pl-10 pr-4 py-3 text-white outline-none transition-colors" placeholder="••••••••" />
             </div>
-            {fieldErrors.password && (
-              <p className="text-xs text-red-400 font-medium pl-1">{fieldErrors.password}</p>
-            )}
           </div>
 
-          {/* Submit Button */}
-          <motion.button  
-            whileTap={{ scale: 0.98 }}
-            disabled={loading}
-            type="submit" 
-            className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/10 mt-2 cursor-pointer disabled:opacity-50"
-          >
-            {loading ? "Signing In..." : "Sign In"}
-          </motion.button>
+          <button type="submit" disabled={isLoading} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50">
+            <LogIn size={18} /> {isLoading ? "Logging in..." : "Login"}
+          </button>
         </form>
 
-        {/* Divider */}
-        <div className="relative my-6 flex items-center justify-center">
-          <div className="absolute w-full border-t border-slate-800" />
-          <span className="relative bg-[#111827] px-3 text-xs text-slate-500 uppercase tracking-widest">Or Continue With</span>
-        </div>
-
-        {/* Google Login Button */}
-        <motion.button  
-          whileTap={{ scale: 0.98 }}
-          type="button" // Explicitly explicitly defined to avoid triggers with form submission
-          onClick={handleGoogleAuth}
-          className="w-full py-3.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 font-semibold text-sm rounded-xl transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer shadow-md"
-        >
-          <FaGoogle className="text-amber-500" /> Google Account
-        </motion.button>
-
-        {/* Redirect Link */}
-        <p className="text-center text-sm text-slate-400 mt-8">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-amber-500 font-bold hover:underline">
-            Register Here
-          </Link>
+        <p className="text-center text-slate-400 text-sm mt-6">
+          Don't have an account? <Link href="/register" className="text-amber-500 hover:text-amber-400 font-semibold">Create Account</Link>
         </p>
       </motion.div>
     </div>
