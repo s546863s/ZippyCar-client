@@ -64,6 +64,16 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {/* Add Car Button - Desktop */}
+            {user && (
+              <Link
+                href="/add-car"
+                className="text-sm font-medium tracking-wide uppercase transition-colors duration-200 text-[#f59e0b] hover:text-[#f59e0b]/80 border border-amber-500/30 px-4 py-1.5 rounded-lg"
+              >
+                Add Car
+              </Link>
+            )}
           </div>
 
           {/* Desktop Auth Section */}
@@ -137,6 +147,17 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
+          
+          {/* Add Car Button - Mobile */}
+          {user && (
+            <Link 
+              href="/add-car" 
+              className="block px-3 py-2 rounded-md text-base font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20"
+              onClick={() => setIsOpen(false)}
+            >
+              ➕ Add Car
+            </Link>
+          )}
           
           {!loading && (
             user ? (
