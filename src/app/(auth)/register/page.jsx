@@ -79,3 +79,6 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+
+
+// End Toastify notifications and Google login logic in GoogleLogin.jsx, and form handling in login/page.jsx.
