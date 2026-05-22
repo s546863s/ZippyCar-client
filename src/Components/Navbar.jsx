@@ -168,7 +168,8 @@ const Navbar = () => {
                 <Link href="/add-car" className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]" onClick={() => setIsOpen(false)}>Add Car</Link>
                 <Link href="/my-bookings" className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]" onClick={() => setIsOpen(false)}>My Bookings</Link>
                 <Link href="/my-added-cars" className="block px-3 py-2 text-base font-medium text-[#94a3b8] hover:bg-[#1e293b] hover:text-[#f59e0b]" onClick={() => setIsOpen(false)}>My Added Cars</Link>
-                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 text-base font-medium text-red-400 hover:bg-[#1e293b]">Logout</button>
+                <button onClick={handleLogout} className="w-full text-left block px-3 py-2 text-base font-medium text-red-400 hover:bg-[#1e293b]">Logout</button> 
+                {/* i change */}
               </div>
             ) : (
               <div className="pt-4 border-t border-[#334155]">
